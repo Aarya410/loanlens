@@ -1,0 +1,39 @@
+# GitLab equivalent of the GitHub Actions pipeline.
+# Set CI/CD variables in GitLab: RENDER_DEPLOY_HOOK, APP_URL
+
+stages: [test, build, deploy]
+
+test:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - pip install -r requirements-dev.txt
+    - ruff check .
+    - python train.py
+    - pytest -q
+
+build:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker build --build-arg GIT_SHA=$CI_COMMIT_SHA --build-arg BUILD_TIME="$(date -u +'%Y-%m-%d %H:%M UTC')" -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA -t $CI_REGISTRY_IMAGE:latest .
+    - docker push --all-tags $CI_REGISTRY_IMAGE
+
+deploy:
+  stage: deploy
+  image: curlimages/curl:8.11.1
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - curl -fsS -X POST "$RENDER_DEPLOY_HOOK&ref=$CI_COMMIT_SHA"
+    - |
+      short=$(echo $CI_COMMIT_SHA | cut -c1-7)
+      for i in $(seq 1 40); do
+        curl -fsS "$APP_URL/api/health" | grep -q "\"version\":\"$short\"" && echo "Live: $short" && exit 0
+        sleep 15
+      done
+      exit 1

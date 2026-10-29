@@ -1,0 +1,9 @@
+# Render Blueprint: infrastructure as code for the hosting side.
+# autoDeploy is OFF on purpose: the CI pipeline triggers the deploy only after tests pass.
+services:
+  - type: web
+    name: loanlens
+    runtime: docker
+    plan: free
+    autoDeploy: false
+    healthCheckPath: /api/health

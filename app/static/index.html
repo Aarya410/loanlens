@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoanLens: loan approval predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EEF3; --card:#FFFFFF; --ink:#0F2233; --muted:#5B6E7F; --line:#D5DEE6;
+  --brand:#1D4ED8; --ok:#0B8F6A; --mid:#B9770E; --bad:#C0392B;
+  --serif:'Fraunces',Georgia,serif; --sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0C1722; --card:#13212F; --ink:#E7EEF5; --muted:#8CA0B3; --line:#223647; --brand:#6D95FF; --ok:#34D1A0; --mid:#F0B24A; --bad:#FF7B6B;}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+header{max-width:1120px;width:100%;margin:0 auto;padding:36px 24px 8px}
+h1{font-family:var(--serif);font-size:clamp(28px,4vw,40px);margin:0 0 6px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:60ch}
+main{max-width:1120px;width:100%;margin:0 auto;padding:20px 24px 32px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;flex:1}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+h2{font-size:16px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.presets button{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.presets button:hover{border-color:var(--brand);color:var(--brand)}
+.field{margin-bottom:16px}
+.field label{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:6px}
+.field output{font-variant-numeric:tabular-nums;color:var(--brand)}
+input[type=range]{width:100%;accent-color:var(--brand);height:24px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+
+/* result */
+.gauge{position:relative;max-width:340px;margin:4px auto 0}
+.gauge svg{width:100%;display:block;overflow:visible}
+.track{stroke:var(--line)}
+.arc{transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.score{position:absolute;left:0;right:0;bottom:6px;text-align:center}
+.score b{font-family:var(--serif);font-size:56px;line-height:1;font-weight:600;font-variant-numeric:tabular-nums}
+.score span{display:block;color:var(--muted);font-size:13px}
+.verdict{text-align:center;font-weight:700;font-size:18px;margin:14px 0 18px}
+.verdict.high{color:var(--ok)} .verdict.mid{color:var(--mid)} .verdict.low{color:var(--bad)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.stat small{color:var(--muted);display:block;font-size:12px}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.factors h3{font-size:14px;margin:0 0 10px}
+.f{display:grid;grid-template-columns:120px 1fr 48px;align-items:center;gap:10px;font-size:13px;margin-bottom:7px}
+.bar{position:relative;height:10px;background:var(--bg);border-radius:6px}
+.bar i{position:absolute;top:0;bottom:0;border-radius:6px;transition:all .5s}
+.bar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.f em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.err{color:var(--bad);font-size:14px;text-align:center;margin:10px 0 0;min-height:1.2em}
+
+/* pipeline strip: shows what the CI/CD pipeline shipped */
+footer{border-top:1px solid var(--line);background:var(--card)}
+.pipe{max-width:1120px;margin:0 auto;padding:14px 24px;display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;font-size:13px;color:var(--muted)}
+.pipe b{color:var(--ink);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:6px}
+.dot.live{background:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 25%,transparent)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--bg);padding:2px 7px;border-radius:6px;color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>LoanLens</h1>
+  <p>Enter an applicant's details and a gradient-boosting model estimates the chance the loan is approved, and shows which inputs moved the score.</p>
+</header>
+
+<main>
+  <section class="card" aria-labelledby="in">
+    <h2 id="in">Applicant details</h2>
+    <p class="sub">The result updates as you move a slider.</p>
+    <div class="presets" role="group" aria-label="Example applicants">
+      <button type="button" data-p="strong">Strong profile</button>
+      <button type="button" data-p="border">Borderline</button>
+      <button type="button" data-p="risky">High risk</button>
+    </div>
+    <div id="form" class="grid2"></div>
+  </section>
+
+  <section class="card" aria-labelledby="out" aria-live="polite">
+    <h2 id="out">Approval chance</h2>
+    <p class="sub">Estimated by the model, not a bank decision.</p>
+    <div class="gauge">
+      <svg viewBox="0 0 200 112" aria-hidden="true">
+        <path class="track" d="M 14 100 A 86 86 0 0 1 186 100" fill="none" stroke-width="14" stroke-linecap="round" pathLength="100"/>
+        <path id="arc" class="arc" d="M 14 100 A 86 86 0 0 1 186 100" fill="none" stroke="var(--brand)" stroke-width="14" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+      </svg>
+      <div class="score"><b id="pct">--</b><span>chance of approval</span></div>
+    </div>
+    <div id="verdict" class="verdict">Calculating...</div>
+    <div class="stats">
+      <div class="stat"><small>Estimated EMI at 9.5%</small><b id="emi">--</b></div>
+      <div class="stat"><small>Income going to EMIs</small><b id="burden">--</b></div>
+    </div>
+    <div class="factors">
+      <h3>What moved the score</h3>
+      <div id="factors"></div>
+      <p class="hint">Each bar compares this applicant with a typical one. Green bars to the right help; red bars to the left hurt.</p>
+    </div>
+    <p id="err" class="err"></p>
+  </section>
+</main>
+
+<footer>
+  <div class="pipe" id="pipe">
+    <span><span class="dot" id="dot"></span><b id="status">Checking service...</b></span>
+  </div>
+</footer>
+
+<script>
+const FIELDS=[
+  {k:'age',l:'Age',min:21,max:65,step:1,v:32,f:v=>v+' yrs'},
+  {k:'annual_income_lakh',l:'Annual income',min:2,max:60,step:.5,v:9,f:v=>'₹'+v+' L'},
+  {k:'loan_amount_lakh',l:'Loan amount',min:1,max:150,step:.5,v:18,f:v=>'₹'+v+' L'},
+  {k:'term_years',l:'Loan term',min:1,max:30,step:1,v:15,f:v=>v+' yrs'},
+  {k:'credit_score',l:'Credit score',min:300,max:900,step:5,v:720,f:v=>v},
+  {k:'employment_years',l:'Work experience',min:0,max:40,step:1,v:5,f:v=>v+' yrs'},
+  {k:'existing_emi_k',l:'Existing EMIs / month',min:0,max:100,step:.5,v:6,f:v=>'₹'+v+' k'},
+  {k:'dependents',l:'Dependents',min:0,max:6,step:1,v:1,f:v=>v},
+];
+const PRESETS={
+  strong:{age:34,annual_income_lakh:18,loan_amount_lakh:20,term_years:15,credit_score:790,employment_years:9,existing_emi_k:4,dependents:1},
+  border:{age:40,annual_income_lakh:7,loan_amount_lakh:22,term_years:15,credit_score:640,employment_years:6,existing_emi_k:8,dependents:2},
+  risky:{age:52,annual_income_lakh:4,loan_amount_lakh:35,term_years:20,credit_score:540,employment_years:2,existing_emi_k:9,dependents:4},
+};
+const $=id=>document.getElementById(id);
+const form=$('form');
+const inputs={};
+FIELDS.forEach(d=>{
+  const w=document.createElement('div');w.className='field';
+  w.innerHTML=`<label for="${d.k}">${d.l}<output id="o_${d.k}"></output></label>
+  <input type="range" id="${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${d.v}">`;
+  form.appendChild(w);
+  const el=w.querySelector('input');inputs[d.k]=el;
+  const out=w.querySelector('output');
+  const show=()=>out.textContent=d.f(+el.value);
+  el.addEventListener('input',()=>{show();schedule()});show();
+});
+function setValues(o){FIELDS.forEach(d=>{inputs[d.k].value=o[d.k];inputs[d.k].dispatchEvent(new Event('input'))})}
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>setValues(PRESETS[b.dataset.p]));
+
+let timer,seq=0;
+function schedule(){clearTimeout(timer);timer=setTimeout(run,200)}
+const rupees=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+
+async function run(){
+  const my=++seq;
+  const body={};FIELDS.forEach(d=>body[d.k]=+inputs[d.k].value);
+  try{
+    const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok)throw new Error('The server rejected these values. Check each field is in range.');
+    const d=await r.json();
+    if(my!==seq)return;
+    $('err').textContent='';
+    render(d);
+  }catch(e){
+    $('err').textContent=e.message.includes('fetch')?'Could not reach the prediction service. Retry in a moment.':e.message;
+  }
+}
+function render(d){
+  const pct=d.probability*100;
+  const col=d.tier==='high'?'var(--ok)':d.tier==='mid'?'var(--mid)':'var(--bad)';
+  $('arc').style.strokeDashoffset=100-pct;$('arc').style.stroke=col;
+  $('pct').textContent=Math.round(pct)+'%';
+  const v=$('verdict');v.textContent=d.verdict;v.className='verdict '+d.tier;
+  $('emi').textContent=rupees(d.monthly_emi);
+  $('burden').textContent=d.debt_burden_pct+'%';
+  const max=Math.max(.05,...d.factors.map(f=>Math.abs(f.impact)));
+  $('factors').innerHTML=d.factors.map(f=>{
+    const w=Math.abs(f.impact)/max*50, pos=f.impact>=0;
+    const style=pos?`left:50%;width:${w}%;background:var(--ok)`:`left:${50-w}%;width:${w}%;background:var(--bad)`;
+    const sign=f.impact>0?'+':'';
+    return `<div class="f"><span>${f.label}</span><div class="bar"><i style="${style}"></i></div><em>${sign}${Math.round(f.impact*100)}</em></div>`;
+  }).join('');
+}
+
+async function pipeline(){
+  try{
+    const h=await (await fetch('/api/health')).json();
+    $('dot').className='dot live';$('status').textContent='Live';
+    const m=h.model;
+    $('pipe').insertAdjacentHTML('beforeend',
+      `<span>Deployed commit <code>${h.version}</code></span>
+       <span>Built <b>${h.built_at}</b></span>
+       <span>Model accuracy <b>${(m.accuracy*100).toFixed(1)}%</b></span>
+       <span>ROC-AUC <b>${m.roc_auc}</b></span>
+       <span>Trained on <b>${m.samples.toLocaleString('en-IN')}</b> records</span>`);
+  }catch{$('status').textContent='Service unreachable'}
+}
+pipeline();run();
+</script>
+</body>
+</html>
