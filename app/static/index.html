@@ -1,865 +1,1778 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LoanLens — Smart Loan Approval Predictor</title>
-<meta name="description" content="AI-powered loan approval predictor. Check your chances, explore insights, and track your loan applications.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
-<style>
-/* ════════════════════════════════════════════════════════
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LoanLens — Smart Loan Approval Predictor</title>
+  <meta name="description"
+    content="AI-powered loan approval predictor. Check your chances, explore insights, and track your loan applications.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ════════════════════════════════════════════════════════
    DESIGN TOKENS
 ════════════════════════════════════════════════════════ */
-:root {
-  --bg:      #080d1a;
-  --bg2:     #0d1526;
-  --card:    #111d30;
-  --card2:   #162038;
-  --border:  #1e3050;
-  --border2: #243a5a;
-  --ink:     #e8f0fe;
-  --ink2:    #a8bbd4;
-  --ink3:    #6b8aaa;
-  --brand:   #4f8ef7;
-  --brand2:  #3b6fd4;
-  --ok:      #22d3a0;
-  --ok2:     #0fa87a;
-  --mid:     #f4b942;
-  --mid2:    #c9901a;
-  --bad:     #f7626a;
-  --bad2:    #c93d45;
-  --purple:  #8b5cf6;
-  --pink:    #ec4899;
-  --nav-w:   240px;
-  --radius:  14px;
-  --sans:    'Inter', system-ui, sans-serif;
-  --head:    'Outfit', system-ui, sans-serif;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
-  font-family: var(--sans);
-  background: var(--bg);
-  color: var(--ink);
-  display: flex;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+    :root {
+      --bg: #080d1a;
+      --bg2: #0d1526;
+      --card: #111d30;
+      --card2: #162038;
+      --border: #1e3050;
+      --border2: #243a5a;
+      --ink: #e8f0fe;
+      --ink2: #a8bbd4;
+      --ink3: #6b8aaa;
+      --brand: #0ea5e9;
+      --brand2: #0284c7;
+      --ok: #22d3a0;
+      --ok2: #0fa87a;
+      --mid: #f4b942;
+      --mid2: #c9901a;
+      --bad: #f7626a;
+      --bad2: #c93d45;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --nav-w: 240px;
+      --radius: 16px;
+      --sans: 'Inter', system-ui, sans-serif;
+      --head: 'Outfit', system-ui, sans-serif;
+    }
 
-/* ════════════════════════════════════════════════════════
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ════════════════════════════════════════════════════════
    SCROLLBAR
 ════════════════════════════════════════════════════════ */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    ::-webkit-scrollbar-track {
+      background: var(--bg2);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    SIDEBAR NAV
 ════════════════════════════════════════════════════════ */
-#sidebar {
-  width: var(--nav-w);
-  min-height: 100vh;
-  background: var(--bg2);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 0 0 24px;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 100;
-  transition: transform .3s ease;
-}
-.logo {
-  padding: 28px 20px 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
-.logo-text {
-  font-family: var(--head);
-  font-size: 22px;
-  font-weight: 900;
-  background: linear-gradient(135deg, var(--brand), var(--purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -.5px;
-}
-.logo-sub { font-size: 11px; color: var(--ink3); margin-top: 2px; }
-.nav-section { padding: 8px 12px 4px; font-size: 10px; font-weight: 700; color: var(--ink3); letter-spacing: .08em; text-transform: uppercase; }
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px; margin: 2px 8px;
-  border-radius: 10px; cursor: pointer;
-  font-size: 14px; font-weight: 500; color: var(--ink2);
-  transition: all .18s;
-  border: none; background: none; width: calc(100% - 16px); text-align: left;
-}
-.nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
-.nav-item:hover { background: var(--card); color: var(--ink); }
-.nav-item.active { background: linear-gradient(135deg, rgba(79,142,247,.2), rgba(139,92,246,.15)); color: var(--brand); font-weight: 600; }
-.nav-item.active .icon { filter: drop-shadow(0 0 6px var(--brand)); }
-.nav-spacer { flex: 1; }
-.nav-user {
-  margin: 8px; padding: 12px; border-radius: 12px;
-  background: var(--card); border: 1px solid var(--border);
-  display: flex; align-items: center; gap: 10px;
-  cursor: pointer; transition: all .18s;
-}
-.nav-user:hover { border-color: var(--border2); }
-.nav-user img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-.nav-user-info { flex: 1; min-width: 0; }
-.nav-user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.nav-user-role { font-size: 11px; color: var(--ink3); }
-.nav-user-arrow { color: var(--ink3); font-size: 12px; }
+    #sidebar {
+      width: var(--nav-w);
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0 0 24px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      transition: transform .3s ease;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .logo {
+      padding: 28px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .logo-text {
+      font-family: var(--head);
+      font-size: 22px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--brand), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -.5px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 8px 12px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink3);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin: 2px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink2);
+      transition: all .18s;
+      border: none;
+      background: none;
+      width: calc(100% - 16px);
+      text-align: left;
+    }
+
+    .nav-item .icon {
+      font-size: 18px;
+      width: 22px;
+      text-align: center;
+    }
+
+    .nav-item:hover {
+      background: var(--card);
+      color: var(--ink);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(79, 142, 247, .2), rgba(139, 92, 246, .15));
+      color: var(--brand);
+      font-weight: 600;
+    }
+
+    .nav-item.active .icon {
+      filter: drop-shadow(0 0 6px var(--brand));
+    }
+
+    .nav-spacer {
+      flex: 1;
+    }
+
+    .nav-user {
+      margin: 8px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all .18s;
+    }
+
+    .nav-user:hover {
+      border-color: var(--border2);
+    }
+
+    .nav-user img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .nav-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .nav-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-user-role {
+      font-size: 11px;
+      color: var(--ink3);
+    }
+
+    .nav-user-arrow {
+      color: var(--ink3);
+      font-size: 12px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    MAIN CONTENT
 ════════════════════════════════════════════════════════ */
-#app {
-  margin-left: var(--nav-w);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 32px; border-bottom: 1px solid var(--border);
-  background: var(--bg2); position: sticky; top: 0; z-index: 50;
-}
-.topbar-title { font-family: var(--head); font-size: 22px; font-weight: 800; color: var(--ink); }
-.topbar-sub { font-size: 13px; color: var(--ink3); margin-top: 1px; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border: none; font-family: inherit; transition: all .18s;
-}
-.btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand2)); color: #fff; }
-.btn-primary:hover { opacity: .88; transform: translateY(-1px); }
-.btn-ghost { background: var(--card); color: var(--ink2); border: 1px solid var(--border); }
-.btn-ghost:hover { border-color: var(--border2); color: var(--ink); }
-.btn-danger { background: rgba(247,98,106,.15); color: var(--bad); border: 1px solid rgba(247,98,106,.3); }
-.btn-danger:hover { background: rgba(247,98,106,.25); }
+    #app {
+      margin-left: var(--nav-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-.page { display: none; flex-direction: column; flex: 1; padding: 32px; gap: 24px; }
-.page.active { display: flex; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .topbar-title {
+      font-family: var(--head);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .topbar-sub {
+      font-size: 13px;
+      color: var(--ink3);
+      margin-top: 1px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all .18s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      opacity: .88;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: var(--card);
+      color: var(--ink2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--border2);
+      color: var(--ink);
+    }
+
+    .btn-danger {
+      background: rgba(247, 98, 106, .15);
+      color: var(--bad);
+      border: 1px solid rgba(247, 98, 106, .3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(247, 98, 106, .25);
+    }
+
+    .page {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 32px;
+      gap: 24px;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    /* ════════════════════════════════════════════════════════
    CARDS / GRID
 ════════════════════════════════════════════════════════ */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px;
-  transition: border-color .18s;
-}
-.card:hover { border-color: var(--border2); }
-.card-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-.card-sub { font-size: 12px; color: var(--ink3); margin-bottom: 16px; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      transition: border-color .18s;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .card:hover {
+      border-color: var(--border2);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--ink3);
+      margin-bottom: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    STAT CARDS
 ════════════════════════════════════════════════════════ */
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  display: flex; flex-direction: column; gap: 8px;
-  transition: all .2s;
-  position: relative; overflow: hidden;
-}
-.stat-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-}
-.stat-card.blue::before  { background: linear-gradient(90deg, var(--brand), var(--purple)); }
-.stat-card.green::before { background: linear-gradient(90deg, var(--ok), #11998e); }
-.stat-card.amber::before { background: linear-gradient(90deg, var(--mid), var(--pink)); }
-.stat-card.red::before   { background: linear-gradient(90deg, var(--bad), var(--purple)); }
-.stat-icon { font-size: 24px; }
-.stat-label { font-size: 12px; color: var(--ink3); font-weight: 500; }
-.stat-value { font-family: var(--head); font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -.5px; }
-.stat-change { font-size: 12px; }
-.stat-change.up { color: var(--ok); }
-.stat-change.down { color: var(--bad); }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .stat-card.blue::before {
+      background: linear-gradient(90deg, var(--brand), var(--purple));
+    }
+
+    .stat-card.green::before {
+      background: linear-gradient(90deg, var(--ok), #11998e);
+    }
+
+    .stat-card.amber::before {
+      background: linear-gradient(90deg, var(--mid), var(--pink));
+    }
+
+    .stat-card.red::before {
+      background: linear-gradient(90deg, var(--bad), var(--purple));
+    }
+
+    .stat-icon {
+      font-size: 24px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--ink3);
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-family: var(--head);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -.5px;
+    }
+
+    .stat-change {
+      font-size: 12px;
+    }
+
+    .stat-change.up {
+      color: var(--ok);
+    }
+
+    .stat-change.down {
+      color: var(--bad);
+    }
+
+    /* ════════════════════════════════════════════════════════
    LOAN RATES
 ════════════════════════════════════════════════════════ */
-.rate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-.rate-card {
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex; flex-direction: column; gap: 6px;
-  transition: all .2s;
-}
-.rate-card:hover { border-color: var(--brand); transform: translateY(-2px); }
-.rate-icon { font-size: 22px; }
-.rate-type { font-size: 12px; color: var(--ink3); }
-.rate-value { font-family: var(--head); font-size: 22px; font-weight: 800; color: var(--ink); }
-.rate-change { font-size: 11px; display: flex; align-items: center; gap: 3px; }
-.rate-change.up   { color: var(--bad); }
-.rate-change.down { color: var(--ok); }
-.rate-change.flat { color: var(--ink3); }
-.rates-note { font-size: 11px; color: var(--ink3); margin-top: 8px; }
-.rates-as-of { font-size: 12px; color: var(--ink3); margin-bottom: 12px; }
+    .rate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .rate-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all .2s;
+    }
+
+    .rate-card:hover {
+      border-color: var(--brand);
+      transform: translateY(-2px);
+    }
+
+    .rate-icon {
+      font-size: 22px;
+    }
+
+    .rate-type {
+      font-size: 12px;
+      color: var(--ink3);
+    }
+
+    .rate-value {
+      font-family: var(--head);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .rate-change {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .rate-change.up {
+      color: var(--bad);
+    }
+
+    .rate-change.down {
+      color: var(--ok);
+    }
+
+    .rate-change.flat {
+      color: var(--ink3);
+    }
+
+    .rates-note {
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 8px;
+    }
+
+    .rates-as-of {
+      font-size: 12px;
+      color: var(--ink3);
+      margin-bottom: 12px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    APPLY / PREDICTOR
 ════════════════════════════════════════════════════════ */
-.apply-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-.presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-.preset-btn {
-  font: inherit; font-size: 12px; font-weight: 600;
-  border: 1px solid var(--border); background: var(--card2);
-  color: var(--ink2); padding: 6px 14px; border-radius: 999px; cursor: pointer;
-  transition: all .18s;
-}
-.preset-btn:hover { border-color: var(--brand); color: var(--brand); }
-.field { margin-bottom: 18px; }
-.field label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--ink2); }
-.field output { font-size: 13px; color: var(--brand); font-weight: 700; }
-input[type=range] {
-  width: 100%; height: 6px; accent-color: var(--brand);
-  background: var(--border); border-radius: 3px; cursor: pointer;
-  -webkit-appearance: none; appearance: none;
-}
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 0 3px rgba(79,142,247,.25); cursor: pointer; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+    .apply-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
 
-/* Gauge */
-.gauge-wrap { text-align: center; margin: 8px 0; }
-.gauge-wrap svg { max-width: 260px; }
-.gauge-num { font-family: var(--head); font-size: 52px; font-weight: 900; display: block; color: var(--ink); letter-spacing: -2px; }
-.gauge-label { font-size: 12px; color: var(--ink3); }
-.verdict-text { font-size: 17px; font-weight: 700; text-align: center; margin: 12px 0; }
-.verdict-text.high { color: var(--ok); }
-.verdict-text.mid  { color: var(--mid); }
-.verdict-text.low  { color: var(--bad); }
-.result-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-.result-stat { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-.result-stat small { font-size: 11px; color: var(--ink3); display: block; margin-bottom: 4px; }
-.result-stat b { font-size: 18px; font-weight: 700; }
+    .presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
 
-/* Factors */
-.factors-list { display: flex; flex-direction: column; gap: 8px; }
-.factor-row { display: grid; grid-template-columns: 100px 1fr 40px; align-items: center; gap: 10px; font-size: 12px; }
-.factor-label { color: var(--ink2); font-weight: 500; }
-.factor-bar { position: relative; height: 8px; background: var(--border); border-radius: 4px; }
-.factor-bar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; transition: all .5s; }
-.factor-bar::after { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--border2); }
-.factor-val { text-align: right; color: var(--ink3); font-variant-numeric: tabular-nums; }
-.err-msg { color: var(--bad); font-size: 13px; text-align: center; padding: 8px; }
+    .preset-btn {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      color: var(--ink2);
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all .18s;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .preset-btn:hover {
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--ink2);
+    }
+
+    .field output {
+      font-size: 13px;
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      accent-color: var(--brand);
+      background: var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--brand);
+      box-shadow: 0 0 0 3px rgba(79, 142, 247, .25);
+      cursor: pointer;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 20px;
+    }
+
+    /* Gauge */
+    .gauge-wrap {
+      text-align: center;
+      margin: 8px 0;
+    }
+
+    .gauge-wrap svg {
+      max-width: 260px;
+    }
+
+    .gauge-num {
+      font-family: var(--head);
+      font-size: 52px;
+      font-weight: 900;
+      display: block;
+      color: var(--ink);
+      letter-spacing: -2px;
+    }
+
+    .gauge-label {
+      font-size: 12px;
+      color: var(--ink3);
+    }
+
+    .verdict-text {
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+      margin: 12px 0;
+    }
+
+    .verdict-text.high {
+      color: var(--ok);
+    }
+
+    .verdict-text.mid {
+      color: var(--mid);
+    }
+
+    .verdict-text.low {
+      color: var(--bad);
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .result-stat {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .result-stat small {
+      font-size: 11px;
+      color: var(--ink3);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .result-stat b {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Factors */
+    .factors-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .factor-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 40px;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .factor-label {
+      color: var(--ink2);
+      font-weight: 500;
+    }
+
+    .factor-bar {
+      position: relative;
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .factor-bar i {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-radius: 4px;
+      transition: all .5s;
+    }
+
+    .factor-bar::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -3px;
+      bottom: -3px;
+      width: 1px;
+      background: var(--border2);
+    }
+
+    .factor-val {
+      text-align: right;
+      color: var(--ink3);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .err-msg {
+      color: var(--bad);
+      font-size: 13px;
+      text-align: center;
+      padding: 8px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    INSIGHTS
 ════════════════════════════════════════════════════════ */
-.chart-container { position: relative; height: 200px; display: flex; align-items: flex-end; gap: 10px; padding-top: 20px; }
-.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
-.chart-bar { width: 100%; border-radius: 6px 6px 0 0; transition: all .5s cubic-bezier(.2,.8,.2,1); min-height: 4px; }
-.chart-label { font-size: 10px; color: var(--ink3); }
-.chart-val { font-size: 10px; color: var(--ink2); font-weight: 600; }
+    .chart-container {
+      position: relative;
+      height: 200px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding-top: 20px;
+    }
 
-.score-table { width: 100%; border-collapse: collapse; }
-.score-table th { font-size: 11px; color: var(--ink3); font-weight: 600; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-.score-table td { padding: 8px; font-size: 13px; border-bottom: 1px solid var(--border); }
-.score-table tr:last-child td { border-bottom: none; }
-.mini-bar-wrap { display: flex; align-items: center; gap: 8px; }
-.mini-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.mini-bar-fill { height: 100%; border-radius: 3px; }
-.factor-importance { display: flex; flex-direction: column; gap: 10px; }
-.fi-row { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 12px; }
-.fi-label { font-size: 13px; color: var(--ink2); }
-.fi-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
-.fi-fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--purple)); border-radius: 4px; transition: width .8s cubic-bezier(.2,.8,.2,1); }
-.fi-val { font-size: 12px; color: var(--ink3); text-align: right; }
+    .chart-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
 
-.model-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(79,142,247,.12); border: 1px solid rgba(79,142,247,.3); color: var(--brand); padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-.metric-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.metric-row:last-child { border-bottom: none; }
-.metric-name { font-size: 13px; color: var(--ink2); }
-.metric-val { font-size: 15px; font-weight: 700; }
+    .chart-bar {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      transition: all .5s cubic-bezier(.2, .8, .2, 1);
+      min-height: 4px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .chart-label {
+      font-size: 10px;
+      color: var(--ink3);
+    }
+
+    .chart-val {
+      font-size: 10px;
+      color: var(--ink2);
+      font-weight: 600;
+    }
+
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .score-table th {
+      font-size: 11px;
+      color: var(--ink3);
+      font-weight: 600;
+      text-align: left;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-table td {
+      padding: 8px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .mini-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .factor-importance {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fi-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .fi-label {
+      font-size: 13px;
+      color: var(--ink2);
+    }
+
+    .fi-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .fi-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), var(--purple));
+      border-radius: 4px;
+      transition: width .8s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .fi-val {
+      font-size: 12px;
+      color: var(--ink3);
+      text-align: right;
+    }
+
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(79, 142, 247, .12);
+      border: 1px solid rgba(79, 142, 247, .3);
+      color: var(--brand);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-name {
+      font-size: 13px;
+      color: var(--ink2);
+    }
+
+    .metric-val {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    /* ════════════════════════════════════════════════════════
    HISTORY
 ════════════════════════════════════════════════════════ */
-.history-list { display: flex; flex-direction: column; gap: 10px; }
-.history-item {
-  background: var(--card2); border: 1px solid var(--border); border-radius: 12px;
-  padding: 14px 18px; display: flex; align-items: center; gap: 16px;
-  transition: all .18s;
-}
-.history-item:hover { border-color: var(--border2); }
-.history-tier { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.history-tier.high { background: var(--ok); box-shadow: 0 0 0 3px rgba(34,211,160,.2); }
-.history-tier.mid  { background: var(--mid); box-shadow: 0 0 0 3px rgba(244,185,66,.2); }
-.history-tier.low  { background: var(--bad); box-shadow: 0 0 0 3px rgba(247,98,106,.2); }
-.history-info { flex: 1; }
-.history-verdict { font-size: 13px; font-weight: 600; }
-.history-meta { font-size: 11px; color: var(--ink3); margin-top: 2px; }
-.history-prob { font-family: var(--head); font-size: 20px; font-weight: 800; }
-.history-prob.high { color: var(--ok); }
-.history-prob.mid  { color: var(--mid); }
-.history-prob.low  { color: var(--bad); }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .history-item {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all .18s;
+    }
+
+    .history-item:hover {
+      border-color: var(--border2);
+    }
+
+    .history-tier {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .history-tier.high {
+      background: var(--ok);
+      box-shadow: 0 0 0 3px rgba(34, 211, 160, .2);
+    }
+
+    .history-tier.mid {
+      background: var(--mid);
+      box-shadow: 0 0 0 3px rgba(244, 185, 66, .2);
+    }
+
+    .history-tier.low {
+      background: var(--bad);
+      box-shadow: 0 0 0 3px rgba(247, 98, 106, .2);
+    }
+
+    .history-info {
+      flex: 1;
+    }
+
+    .history-verdict {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .history-meta {
+      font-size: 11px;
+      color: var(--ink3);
+      margin-top: 2px;
+    }
+
+    .history-prob {
+      font-family: var(--head);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .history-prob.high {
+      color: var(--ok);
+    }
+
+    .history-prob.mid {
+      color: var(--mid);
+    }
+
+    .history-prob.low {
+      color: var(--bad);
+    }
+
+    /* ════════════════════════════════════════════════════════
    PROFILE
 ════════════════════════════════════════════════════════ */
-.profile-hero {
-  background: linear-gradient(135deg, rgba(79,142,247,.15), rgba(139,92,246,.15));
-  border: 1px solid rgba(79,142,247,.2);
-  border-radius: 18px;
-  padding: 32px;
-  display: flex; align-items: center; gap: 24px;
-}
-.profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(79,142,247,.4); }
-.profile-name { font-family: var(--head); font-size: 26px; font-weight: 800; }
-.profile-email { font-size: 13px; color: var(--ink3); margin-top: 4px; }
-.profile-joined { font-size: 12px; color: var(--ink3); margin-top: 8px; }
-.profile-stats { display: flex; gap: 24px; margin-top: 12px; }
-.profile-stat { text-align: center; }
-.profile-stat-val { font-family: var(--head); font-size: 20px; font-weight: 800; color: var(--brand); }
-.profile-stat-label { font-size: 11px; color: var(--ink3); }
+    .profile-hero {
+      background: linear-gradient(135deg, rgba(79, 142, 247, .15), rgba(139, 92, 246, .15));
+      border: 1px solid rgba(79, 142, 247, .2);
+      border-radius: 18px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid rgba(79, 142, 247, .4);
+    }
+
+    .profile-name {
+      font-family: var(--head);
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .profile-email {
+      font-size: 13px;
+      color: var(--ink3);
+      margin-top: 4px;
+    }
+
+    .profile-joined {
+      font-size: 12px;
+      color: var(--ink3);
+      margin-top: 8px;
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 12px;
+    }
+
+    .profile-stat {
+      text-align: center;
+    }
+
+    .profile-stat-val {
+      font-family: var(--head);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--brand);
+    }
+
+    .profile-stat-label {
+      font-size: 11px;
+      color: var(--ink3);
+    }
+
+    /* ════════════════════════════════════════════════════════
    AUTH MODAL
 ════════════════════════════════════════════════════════ */
-.modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
-  align-items: center; justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--card); border: 1px solid var(--border2);
-  border-radius: 20px; padding: 36px; width: 100%; max-width: 420px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.6);
-  animation: slideUp .25s ease;
-}
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.modal-title { font-family: var(--head); font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-.modal-sub { font-size: 13px; color: var(--ink3); margin-bottom: 24px; }
-.auth-tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
-.auth-tab { flex: 1; padding: 8px; border-radius: 8px; border: none; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink3); cursor: pointer; transition: all .18s; }
-.auth-tab.active { background: var(--card2); color: var(--ink); }
-.form-field { margin-bottom: 16px; }
-.form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
-.form-field input {
-  width: 100%; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 12px 14px; font: inherit; font-size: 14px;
-  color: var(--ink); outline: none; transition: border-color .18s;
-}
-.form-field input:focus { border-color: var(--brand); }
-.form-field input::placeholder { color: var(--ink3); }
-.auth-error { font-size: 13px; color: var(--bad); text-align: center; margin-top: -8px; margin-bottom: 12px; min-height: 18px; }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, .7);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+      animation: slideUp .25s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-title {
+      font-family: var(--head);
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: var(--ink3);
+      margin-bottom: 24px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg2);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all .18s;
+    }
+
+    .auth-tab.active {
+      background: var(--card2);
+      color: var(--ink);
+    }
+
+    .form-field {
+      margin-bottom: 16px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink3);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .form-field input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .18s;
+    }
+
+    .form-field input:focus {
+      border-color: var(--brand);
+    }
+
+    .form-field input::placeholder {
+      color: var(--ink3);
+    }
+
+    .auth-error {
+      font-size: 13px;
+      color: var(--bad);
+      text-align: center;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      min-height: 18px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    FOOTER STRIP
 ════════════════════════════════════════════════════════ */
-.pipeline-strip {
-  border-top: 1px solid var(--border); padding: 12px 32px;
-  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-  font-size: 12px; color: var(--ink3); background: var(--bg2);
-}
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink3); display: inline-block; margin-right: 6px; transition: all .3s; }
-.status-dot.live { background: var(--ok); box-shadow: 0 0 0 3px rgba(34,211,160,.25); }
-.pipeline-strip code { background: var(--border); padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, monospace; color: var(--ink2); font-size: 11px; }
-.pipeline-strip b { color: var(--ink2); }
+    .pipeline-strip {
+      border-top: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--ink3);
+      background: var(--bg2);
+    }
 
-/* ════════════════════════════════════════════════════════
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ink3);
+      display: inline-block;
+      margin-right: 6px;
+      transition: all .3s;
+    }
+
+    .status-dot.live {
+      background: var(--ok);
+      box-shadow: 0 0 0 3px rgba(34, 211, 160, .25);
+    }
+
+    .pipeline-strip code {
+      background: var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, monospace;
+      color: var(--ink2);
+      font-size: 11px;
+    }
+
+    .pipeline-strip b {
+      color: var(--ink2);
+    }
+
+    /* ════════════════════════════════════════════════════════
    EMPTY STATE
 ════════════════════════════════════════════════════════ */
-.empty-state { text-align: center; padding: 48px 24px; }
-.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
-.empty-state p { color: var(--ink3); font-size: 14px; }
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .empty-state .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--ink3);
+      font-size: 14px;
+    }
+
+    /* ════════════════════════════════════════════════════════
    BADGES / TAGS
 ════════════════════════════════════════════════════════ */
-.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-.badge-ok  { background: rgba(34,211,160,.15); color: var(--ok); }
-.badge-mid { background: rgba(244,185,66,.15); color: var(--mid); }
-.badge-bad { background: rgba(247,98,106,.15); color: var(--bad); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
 
-/* ════════════════════════════════════════════════════════
+    .badge-ok {
+      background: rgba(34, 211, 160, .15);
+      color: var(--ok);
+    }
+
+    .badge-mid {
+      background: rgba(244, 185, 66, .15);
+      color: var(--mid);
+    }
+
+    .badge-bad {
+      background: rgba(247, 98, 106, .15);
+      color: var(--bad);
+    }
+
+    /* ════════════════════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-  #sidebar { transform: translateX(-100%); }
-  #sidebar.open { transform: translateX(0); }
-  #app { margin-left: 0; }
-  .apply-layout, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .form-grid { grid-template-columns: 1fr; }
-  .hamburger { display: flex !important; }
-}
-.hamburger { display: none; background: none; border: none; color: var(--ink); font-size: 22px; cursor: pointer; padding: 4px; }
-.overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
-.overlay-bg.open { display: block; }
+    @media (max-width: 900px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
 
-/* Animations */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.page.active { animation: fadeIn .25s ease; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
-</style>
+      #sidebar.open {
+        transform: translateX(0);
+      }
+
+      #app {
+        margin-left: 0;
+      }
+
+      .apply-layout,
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hamburger {
+        display: flex !important;
+      }
+    }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--ink);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .overlay-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      z-index: 99;
+    }
+
+    .overlay-bg.open {
+      display: block;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page.active {
+      animation: fadeIn .25s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
-<nav id="sidebar">
-  <div class="logo">
-    <div class="logo-text">🔍 LoanLens</div>
-    <div class="logo-sub">AI Loan Approval Intelligence</div>
-  </div>
-  <div class="nav-section">Main</div>
-  <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
-    <span class="icon">📊</span> Dashboard
-  </button>
-  <button class="nav-item" data-page="apply" id="nav-apply">
-    <span class="icon">📝</span> Apply / Predict
-  </button>
-  <button class="nav-item" data-page="insights" id="nav-insights">
-    <span class="icon">📈</span> Insights
-  </button>
-  <div class="nav-section">Account</div>
-  <button class="nav-item" data-page="profile" id="nav-profile">
-    <span class="icon">👤</span> Profile
-  </button>
-  <button class="nav-item" data-page="history" id="nav-history">
-    <span class="icon">🕐</span> History
-  </button>
-  <div class="nav-spacer"></div>
-  <div class="nav-user" id="nav-user-card" onclick="showAuth()">
-    <img id="nav-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Guest" alt="avatar">
-    <div class="nav-user-info">
-      <div class="nav-user-name" id="nav-username">Sign In</div>
-      <div class="nav-user-role" id="nav-user-role">Guest user</div>
+  <!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+  <nav id="sidebar">
+    <div class="logo">
+      <div class="logo-text">🔍 LoanLens</div>
+      <div class="logo-sub">AI Loan Approval Intelligence</div>
     </div>
-    <span class="nav-user-arrow">›</span>
-  </div>
-</nav>
-<div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
-
-<!-- ═══════════════════════ APP ═══════════════════════ -->
-<div id="app">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
-      <div>
-        <div class="topbar-title" id="page-title">Dashboard</div>
-        <div class="topbar-sub" id="page-sub">Welcome back — here's your overview</div>
+    <div class="nav-section">Main</div>
+    <button class="nav-item active" data-page="dashboard" id="nav-dashboard">
+      <span class="icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" data-page="apply" id="nav-apply">
+      <span class="icon">📝</span> Apply / Predict
+    </button>
+    <button class="nav-item" data-page="insights" id="nav-insights">
+      <span class="icon">📈</span> Insights
+    </button>
+    <div class="nav-section">Account</div>
+    <button class="nav-item" data-page="profile" id="nav-profile">
+      <span class="icon">👤</span> Profile
+    </button>
+    <button class="nav-item" data-page="history" id="nav-history">
+      <span class="icon">🕐</span> History
+    </button>
+    <div class="nav-spacer"></div>
+    <div class="nav-user" id="nav-user-card" onclick="showAuth()">
+      <img id="nav-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=Guest" alt="avatar">
+      <div class="nav-user-info">
+        <div class="nav-user-name" id="nav-username">Sign In</div>
+        <div class="nav-user-role" id="nav-user-role">Guest user</div>
       </div>
+      <span class="nav-user-arrow">›</span>
     </div>
-    <div class="topbar-right">
-      <button class="btn btn-ghost" id="auth-btn" onclick="showAuth()">Sign In</button>
-    </div>
-  </div>
+  </nav>
+  <div class="overlay-bg" id="overlay-bg" onclick="closeSidebar()"></div>
 
-  <!-- ─────────────── PAGE: DASHBOARD ─────────────── -->
-  <div class="page active" id="page-dashboard">
+  <!-- ═══════════════════════ APP ═══════════════════════ -->
+  <div id="app">
 
-    <!-- Stat Cards -->
-    <div class="grid-4" id="dash-stats">
-      <div class="stat-card blue">
-        <span class="stat-icon">🤖</span>
-        <div class="stat-label">Model Accuracy</div>
-        <div class="stat-value" id="dash-accuracy">--</div>
-        <div class="stat-change up">↑ Gradient Boosting</div>
-      </div>
-      <div class="stat-card green">
-        <span class="stat-icon">✅</span>
-        <div class="stat-label">Approval Rate</div>
-        <div class="stat-value" id="dash-approval">--</div>
-        <div class="stat-change up" id="dash-approval-sub">Based on training data</div>
-      </div>
-      <div class="stat-card amber">
-        <span class="stat-icon">📦</span>
-        <div class="stat-label">Training Samples</div>
-        <div class="stat-value" id="dash-samples">--</div>
-        <div class="stat-change up">Synthetic applicants</div>
-      </div>
-      <div class="stat-card red">
-        <span class="stat-icon">🎯</span>
-        <div class="stat-label">ROC-AUC Score</div>
-        <div class="stat-value" id="dash-roc">--</div>
-        <div class="stat-change up">Classifier quality</div>
-      </div>
-    </div>
-
-    <!-- Loan Rates -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <div class="card-title">📡 Live Loan Interest Rates</div>
-        <button class="btn btn-ghost" onclick="loadRates()" style="font-size:12px;padding:6px 12px;">↻ Refresh</button>
-      </div>
-      <div class="rates-as-of" id="rates-as-of">Loading...</div>
-      <div class="rate-grid" id="rate-grid">
-        <div class="rate-card" style="opacity:.4">Loading rates...</div>
-      </div>
-      <div class="rates-note">⚠️ Indicative rates only. Actual bank rates may vary.</div>
-    </div>
-
-    <!-- Quick Predict CTA + Pipeline Status -->
-    <div class="grid-2">
-      <div class="card" style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(139,92,246,.08));border-color:rgba(79,142,247,.25);">
-        <div class="card-title">🚀 Check Your Approval Chances</div>
-        <div class="card-sub">Get an instant AI prediction on your loan application in seconds.</div>
-        <button class="btn btn-primary" onclick="navigate('apply')">Start Prediction →</button>
-      </div>
-      <div class="card">
-        <div class="card-title">⚙️ CI/CD Pipeline Status</div>
-        <div class="card-sub" id="pipeline-built">Checking deployment...</div>
-        <div id="pipeline-info" style="font-size:13px;color:var(--ink3);">
-          <div class="metric-row"><span class="metric-name"><span class="status-dot" id="status-dot"></span> Service</span><span class="metric-val" id="status-val">Checking...</span></div>
-          <div class="metric-row"><span class="metric-name">🔖 Commit</span><span class="metric-val" id="status-commit">--</span></div>
-          <div class="metric-row"><span class="metric-name">📅 Built</span><span class="metric-val" id="status-built">--</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────── PAGE: APPLY ─────────────── -->
-  <div class="page" id="page-apply">
-    <div class="apply-layout">
-      <!-- Input -->
-      <div class="card">
-        <div class="card-title">Applicant Details</div>
-        <div class="card-sub">Adjust sliders — prediction updates in real time</div>
-        <div class="presets">
-          <button class="preset-btn" data-p="strong">💪 Strong Profile</button>
-          <button class="preset-btn" data-p="border">⚖️ Borderline</button>
-          <button class="preset-btn" data-p="risky">⚠️ High Risk</button>
-        </div>
-        <div class="form-grid" id="slider-form"></div>
-      </div>
-      <!-- Result -->
-      <div class="card" id="result-card">
-        <div class="card-title">Approval Prediction</div>
-        <div class="card-sub">Estimated by AI model — not a bank decision</div>
-        <div class="gauge-wrap">
-          <svg viewBox="0 0 200 112" aria-hidden="true">
-            <path d="M14 100 A86 86 0 0 1 186 100" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round" pathLength="100"/>
-            <path id="arc" d="M14 100 A86 86 0 0 1 186 100" fill="none" stroke="var(--brand)" stroke-width="14" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" style="transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s"/>
-          </svg>
-          <span class="gauge-num" id="prob-pct">--</span>
-          <span class="gauge-label">chance of approval</span>
-        </div>
-        <div class="verdict-text" id="verdict-text">Calculating...</div>
-        <div class="result-stats">
-          <div class="result-stat"><small>Estimated EMI (9.5%)</small><b id="emi-val">--</b></div>
-          <div class="result-stat"><small>Income → EMIs</small><b id="burden-val">--</b></div>
-        </div>
-        <div class="card-title" style="margin-bottom:10px;">What moved the score</div>
-        <div class="factors-list" id="factors-list"></div>
-        <p class="err-msg" id="predict-err"></p>
-        <div style="margin-top:16px;" id="save-hint" class="rates-note">Sign in to save this prediction to your history.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────── PAGE: INSIGHTS ─────────────── -->
-  <div class="page" id="page-insights">
-    <div class="grid-2">
-      <!-- Approval Trend -->
-      <div class="card">
-        <div class="card-title">📈 Approval Rate — Last 7 Days</div>
-        <div class="card-sub">Simulated daily approval rate trend</div>
-        <div class="chart-container" id="trend-chart"></div>
-      </div>
-      <!-- Factor Importance -->
-      <div class="card">
-        <div class="card-title">⚖️ Top Decision Factors</div>
-        <div class="card-sub">Relative importance in the ML model</div>
-        <div class="factor-importance" id="fi-list"></div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <!-- Credit Score Buckets -->
-      <div class="card">
-        <div class="card-title">🎯 Approval by Credit Score</div>
-        <div class="card-sub">How credit score affects approval chances</div>
-        <table class="score-table" id="score-table">
-          <tr><th>Score Range</th><th>Approved %</th><th>Declined %</th></tr>
-        </table>
-      </div>
-      <!-- Model Metrics -->
-      <div class="card">
-        <div class="card-title">🤖 Model Performance</div>
-        <div class="card-sub" id="model-algo-badge"></div>
-        <div id="model-metrics"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────── PAGE: HISTORY ─────────────── -->
-  <div class="page" id="page-history">
-    <div class="card">
-      <div class="card-title">🕐 Your Prediction History</div>
-      <div class="card-sub">Last 20 predictions you made while signed in</div>
-      <div id="history-content">
-        <div class="empty-state">
-          <div class="empty-icon">🔒</div>
-          <p>Sign in to see your prediction history</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────── PAGE: PROFILE ─────────────── -->
-  <div class="page" id="page-profile">
-    <div id="profile-guest">
-      <div class="empty-state" style="padding:80px;">
-        <div class="empty-icon">👤</div>
-        <p style="margin-bottom:20px;">Sign in to view your profile</p>
-        <button class="btn btn-primary" onclick="showAuth()">Sign In / Register</button>
-      </div>
-    </div>
-    <div id="profile-content" style="display:none;">
-      <div class="profile-hero">
-        <img class="profile-avatar" id="profile-avatar" src="" alt="">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
         <div>
-          <div class="profile-name" id="profile-name">--</div>
-          <div class="profile-email" id="profile-email">--</div>
-          <div class="profile-joined" id="profile-joined">--</div>
-          <div class="profile-stats">
-            <div class="profile-stat">
-              <div class="profile-stat-val" id="profile-preds">0</div>
-              <div class="profile-stat-label">Predictions</div>
-            </div>
-            <div class="profile-stat">
-              <div class="profile-stat-val" id="profile-approved">0</div>
-              <div class="profile-stat-label">Approved</div>
-            </div>
-            <div class="profile-stat">
-              <div class="profile-stat-val" id="profile-avg">--</div>
-              <div class="profile-stat-label">Avg Score</div>
-            </div>
+          <div class="topbar-title" id="page-title">Dashboard</div>
+          <div class="topbar-sub" id="page-sub">Welcome back — here's your overview</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" id="auth-btn" onclick="showAuth()">Sign In</button>
+      </div>
+    </div>
+
+    <!-- ─────────────── PAGE: DASHBOARD ─────────────── -->
+    <div class="page active" id="page-dashboard">
+
+      <!-- Stat Cards -->
+      <div class="grid-4" id="dash-stats">
+        <div class="stat-card blue">
+          <span class="stat-icon">🤖</span>
+          <div class="stat-label">Model Accuracy</div>
+          <div class="stat-value" id="dash-accuracy">--</div>
+          <div class="stat-change up">↑ Gradient Boosting</div>
+        </div>
+        <div class="stat-card green">
+          <span class="stat-icon">✅</span>
+          <div class="stat-label">Approval Rate</div>
+          <div class="stat-value" id="dash-approval">--</div>
+          <div class="stat-change up" id="dash-approval-sub">Based on training data</div>
+        </div>
+        <div class="stat-card amber">
+          <span class="stat-icon">📦</span>
+          <div class="stat-label">Training Samples</div>
+          <div class="stat-value" id="dash-samples">--</div>
+          <div class="stat-change up">Synthetic applicants</div>
+        </div>
+        <div class="stat-card red">
+          <span class="stat-icon">🎯</span>
+          <div class="stat-label">ROC-AUC Score</div>
+          <div class="stat-value" id="dash-roc">--</div>
+          <div class="stat-change up">Classifier quality</div>
+        </div>
+      </div>
+
+      <!-- Loan Rates -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="card-title">📡 Live Loan Interest Rates</div>
+          <button class="btn btn-ghost" onclick="loadRates()" style="font-size:12px;padding:6px 12px;">↻
+            Refresh</button>
+        </div>
+        <div class="rates-as-of" id="rates-as-of">Loading...</div>
+        <div class="rate-grid" id="rate-grid">
+          <div class="rate-card" style="opacity:.4">Loading rates...</div>
+        </div>
+        <div class="rates-note">⚠️ Indicative rates only. Actual bank rates may vary.</div>
+      </div>
+
+      <!-- Quick Predict CTA + Pipeline Status -->
+      <div class="grid-2">
+        <div class="card"
+          style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(139,92,246,.08));border-color:rgba(79,142,247,.25);">
+          <div class="card-title">🚀 Check Your Approval Chances</div>
+          <div class="card-sub">Get an instant AI prediction on your loan application in seconds.</div>
+          <button class="btn btn-primary" onclick="navigate('apply')">Start Prediction →</button>
+        </div>
+        <div class="card">
+          <div class="card-title">⚙️ CI/CD Pipeline Status</div>
+          <div class="card-sub" id="pipeline-built">Checking deployment...</div>
+          <div id="pipeline-info" style="font-size:13px;color:var(--ink3);">
+            <div class="metric-row"><span class="metric-name"><span class="status-dot" id="status-dot"></span>
+                Service</span><span class="metric-val" id="status-val">Checking...</span></div>
+            <div class="metric-row"><span class="metric-name">🔖 Commit</span><span class="metric-val"
+                id="status-commit">--</span></div>
+            <div class="metric-row"><span class="metric-name">📅 Built</span><span class="metric-val"
+                id="status-built">--</span></div>
           </div>
         </div>
       </div>
-      <div class="grid-2" style="margin-top:0;">
+    </div>
+
+    <!-- ─────────────── PAGE: APPLY ─────────────── -->
+    <div class="page" id="page-apply">
+      <div class="apply-layout">
+        <!-- Input -->
         <div class="card">
-          <div class="card-title">Account Info</div>
-          <div class="metric-row"><span class="metric-name">Username</span><span class="metric-val" id="info-username">--</span></div>
-          <div class="metric-row"><span class="metric-name">Email</span><span class="metric-val" id="info-email">--</span></div>
-          <div class="metric-row"><span class="metric-name">Member since</span><span class="metric-val" id="info-joined">--</span></div>
+          <div class="card-title">Applicant Details</div>
+          <div class="card-sub">Adjust sliders — prediction updates in real time</div>
+          <div class="presets">
+            <button class="preset-btn" data-p="strong">💪 Strong Profile</button>
+            <button class="preset-btn" data-p="border">⚖️ Borderline</button>
+            <button class="preset-btn" data-p="risky">⚠️ High Risk</button>
+          </div>
+          <div class="form-grid" id="slider-form"></div>
         </div>
-        <div class="card" style="display:flex;flex-direction:column;gap:12px;justify-content:center;">
-          <button class="btn btn-danger" onclick="logout()" style="width:100%;">🚪 Sign Out</button>
+        <!-- Result -->
+        <div class="card" id="result-card">
+          <div class="card-title">Approval Prediction</div>
+          <div class="card-sub">Estimated by AI model — not a bank decision</div>
+          <div class="gauge-wrap">
+            <svg viewBox="0 0 200 112" aria-hidden="true">
+              <path d="M14 100 A86 86 0 0 1 186 100" fill="none" stroke="var(--border)" stroke-width="14"
+                stroke-linecap="round" pathLength="100" />
+              <path id="arc" d="M14 100 A86 86 0 0 1 186 100" fill="none" stroke="var(--brand)" stroke-width="14"
+                stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"
+                style="transition:stroke-dashoffset .7s cubic-bezier(.2,.8,.2,1),stroke .3s" />
+            </svg>
+            <span class="gauge-num" id="prob-pct">--</span>
+            <span class="gauge-label">chance of approval</span>
+          </div>
+          <div class="verdict-text" id="verdict-text">Calculating...</div>
+          <div class="result-stats">
+            <div class="result-stat"><small>Estimated EMI (9.5%)</small><b id="emi-val">--</b></div>
+            <div class="result-stat"><small>Income → EMIs</small><b id="burden-val">--</b></div>
+          </div>
+          <div class="card-title" style="margin-bottom:10px;">What moved the score</div>
+          <div class="factors-list" id="factors-list"></div>
+          <p class="err-msg" id="predict-err"></p>
+          <div style="margin-top:16px;" id="save-hint" class="rates-note">Sign in to save this prediction to your
+            history.</div>
         </div>
       </div>
     </div>
+
+    <!-- ─────────────── PAGE: INSIGHTS ─────────────── -->
+    <div class="page" id="page-insights">
+      <div class="grid-2">
+        <!-- Approval Trend -->
+        <div class="card">
+          <div class="card-title">📈 Approval Rate — Last 7 Days</div>
+          <div class="card-sub">Simulated daily approval rate trend</div>
+          <div class="chart-container" id="trend-chart"></div>
+        </div>
+        <!-- Factor Importance -->
+        <div class="card">
+          <div class="card-title">⚖️ Top Decision Factors</div>
+          <div class="card-sub">Relative importance in the ML model</div>
+          <div class="factor-importance" id="fi-list"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Credit Score Buckets -->
+        <div class="card">
+          <div class="card-title">🎯 Approval by Credit Score</div>
+          <div class="card-sub">How credit score affects approval chances</div>
+          <table class="score-table" id="score-table">
+            <tr>
+              <th>Score Range</th>
+              <th>Approved %</th>
+              <th>Declined %</th>
+            </tr>
+          </table>
+        </div>
+        <!-- Model Metrics -->
+        <div class="card">
+          <div class="card-title">🤖 Model Performance</div>
+          <div class="card-sub" id="model-algo-badge"></div>
+          <div id="model-metrics"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── PAGE: HISTORY ─────────────── -->
+    <div class="page" id="page-history">
+      <div class="card">
+        <div class="card-title">🕐 Your Prediction History</div>
+        <div class="card-sub">Last 20 predictions you made while signed in</div>
+        <div id="history-content">
+          <div class="empty-state">
+            <div class="empty-icon">🔒</div>
+            <p>Sign in to see your prediction history</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────── PAGE: PROFILE ─────────────── -->
+    <div class="page" id="page-profile">
+      <div id="profile-guest">
+        <div class="empty-state" style="padding:80px;">
+          <div class="empty-icon">👤</div>
+          <p style="margin-bottom:20px;">Sign in to view your profile</p>
+          <button class="btn btn-primary" onclick="showAuth()">Sign In / Register</button>
+        </div>
+      </div>
+      <div id="profile-content" style="display:none;">
+        <div class="profile-hero">
+          <img class="profile-avatar" id="profile-avatar" src="" alt="">
+          <div>
+            <div class="profile-name" id="profile-name">--</div>
+            <div class="profile-email" id="profile-email">--</div>
+            <div class="profile-joined" id="profile-joined">--</div>
+            <div class="profile-stats">
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="profile-preds">0</div>
+                <div class="profile-stat-label">Predictions</div>
+              </div>
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="profile-approved">0</div>
+                <div class="profile-stat-label">Approved</div>
+              </div>
+              <div class="profile-stat">
+                <div class="profile-stat-val" id="profile-avg">--</div>
+                <div class="profile-stat-label">Avg Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid-2" style="margin-top:0;">
+          <div class="card">
+            <div class="card-title">Account Info</div>
+            <div class="metric-row"><span class="metric-name">Username</span><span class="metric-val"
+                id="info-username">--</span></div>
+            <div class="metric-row"><span class="metric-name">Email</span><span class="metric-val"
+                id="info-email">--</span></div>
+            <div class="metric-row"><span class="metric-name">Member since</span><span class="metric-val"
+                id="info-joined">--</span></div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column;gap:12px;justify-content:center;">
+            <button class="btn btn-danger" onclick="logout()" style="width:100%;">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="pipeline-strip" id="pipeline-strip">
+      <span><span class="status-dot" id="foot-dot"></span><b id="foot-status">Checking service...</b></span>
+    </div>
   </div>
 
-  <!-- FOOTER -->
-  <div class="pipeline-strip" id="pipeline-strip">
-    <span><span class="status-dot" id="foot-dot"></span><b id="foot-status">Checking service...</b></span>
-  </div>
-</div>
+  <!-- ═══════════════════════ AUTH MODAL ═══════════════════════ -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal">
+      <div class="modal-title">Welcome to LoanLens</div>
+      <div class="modal-sub">Sign in or create an account to save your predictions</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
 
-<!-- ═══════════════════════ AUTH MODAL ═══════════════════════ -->
-<div class="modal-overlay" id="auth-modal">
-  <div class="modal">
-    <div class="modal-title">Welcome to LoanLens</div>
-    <div class="modal-sub">Sign in or create an account to save your predictions</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab" onclick="switchTab('register')">Register</button>
-    </div>
+      <!-- Login Form -->
+      <div id="login-form">
+        <div class="form-field">
+          <label>Username</label>
+          <input type="text" id="login-user" placeholder="your_username" autocomplete="username">
+        </div>
+        <div class="form-field">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="auth-error" id="login-err"></div>
+        <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">Sign In →</button>
+      </div>
 
-    <!-- Login Form -->
-    <div id="login-form">
-      <div class="form-field">
-        <label>Username</label>
-        <input type="text" id="login-user" placeholder="your_username" autocomplete="username">
+      <!-- Register Form -->
+      <div id="register-form" style="display:none;">
+        <div class="form-field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Aarya Dongre">
+        </div>
+        <div class="form-field">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="you@example.com">
+        </div>
+        <div class="form-field">
+          <label>Username</label>
+          <input type="text" id="reg-user" placeholder="aarya410">
+        </div>
+        <div class="form-field">
+          <label>Password</label>
+          <input type="password" id="reg-pass" placeholder="Min 6 characters">
+        </div>
+        <div class="auth-error" id="reg-err"></div>
+        <button class="btn btn-primary" style="width:100%;" onclick="doRegister()">Create Account →</button>
       </div>
-      <div class="form-field">
-        <label>Password</label>
-        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <div class="auth-error" id="login-err"></div>
-      <button class="btn btn-primary" style="width:100%;" onclick="doLogin()">Sign In →</button>
-    </div>
 
-    <!-- Register Form -->
-    <div id="register-form" style="display:none;">
-      <div class="form-field">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="Aarya Dongre">
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn btn-ghost" style="font-size:13px;" onclick="closeAuth()">✕ Close</button>
       </div>
-      <div class="form-field">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="you@example.com">
-      </div>
-      <div class="form-field">
-        <label>Username</label>
-        <input type="text" id="reg-user" placeholder="aarya410">
-      </div>
-      <div class="form-field">
-        <label>Password</label>
-        <input type="password" id="reg-pass" placeholder="Min 6 characters">
-      </div>
-      <div class="auth-error" id="reg-err"></div>
-      <button class="btn btn-primary" style="width:100%;" onclick="doRegister()">Create Account →</button>
-    </div>
-
-    <div style="text-align:center;margin-top:16px;">
-      <button class="btn btn-ghost" style="font-size:13px;" onclick="closeAuth()">✕ Close</button>
     </div>
   </div>
-</div>
 
-<!-- ═══════════════════════ SCRIPT ═══════════════════════ -->
-<script>
-'use strict';
+  <!-- ═══════════════════════ SCRIPT ═══════════════════════ -->
+  <script>
+    'use strict';
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let currentUser = JSON.parse(localStorage.getItem('loanlens_user') || 'null');
-let currentPage = 'dashboard';
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let currentUser = JSON.parse(localStorage.getItem('loanlens_user') || 'null');
+    let currentPage = 'dashboard';
 
-// ── Navigation ────────────────────────────────────────────────────────────────
-const PAGE_TITLES = {
-  dashboard: ['Dashboard', 'Welcome back — here\'s your overview'],
-  apply:     ['Apply / Predict', 'Get your AI-powered loan prediction instantly'],
-  insights:  ['Market Insights', 'Data-driven loan approval analytics'],
-  history:   ['Prediction History', 'Your past loan predictions'],
-  profile:   ['My Profile', 'Manage your account'],
-};
+    // ── Navigation ────────────────────────────────────────────────────────────────
+    const PAGE_TITLES = {
+      dashboard: ['Dashboard', 'Welcome back — here\'s your overview'],
+      apply: ['Apply / Predict', 'Get your AI-powered loan prediction instantly'],
+      insights: ['Market Insights', 'Data-driven loan approval analytics'],
+      history: ['Prediction History', 'Your past loan predictions'],
+      profile: ['My Profile', 'Manage your account'],
+    };
 
-function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('nav-' + page)?.classList.add('active');
-  const [title, sub] = PAGE_TITLES[page];
-  document.getElementById('page-title').textContent = title;
-  document.getElementById('page-sub').textContent = sub;
-  currentPage = page;
-  closeSidebar();
-  if (page === 'insights') loadInsights();
-  if (page === 'history') loadHistory();
-  if (page === 'profile') renderProfile();
-}
+    function navigate(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.getElementById('nav-' + page)?.classList.add('active');
+      const [title, sub] = PAGE_TITLES[page];
+      document.getElementById('page-title').textContent = title;
+      document.getElementById('page-sub').textContent = sub;
+      currentPage = page;
+      closeSidebar();
+      if (page === 'insights') loadInsights();
+      if (page === 'history') loadHistory();
+      if (page === 'profile') renderProfile();
+    }
 
-document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
-  btn.addEventListener('click', () => navigate(btn.dataset.page));
-});
-
-// ── Sidebar (mobile) ─────────────────────────────────────────────────────────
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay-bg').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay-bg').classList.remove('open');
-}
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-function showAuth() {
-  if (currentUser) { navigate('profile'); return; }
-  document.getElementById('auth-modal').classList.add('open');
-}
-function closeAuth() {
-  document.getElementById('auth-modal').classList.remove('open');
-}
-function switchTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t, i) =>
-    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register')));
-  document.getElementById('login-form').style.display    = tab === 'login'    ? '' : 'none';
-  document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
-  document.getElementById('login-err').textContent = '';
-  document.getElementById('reg-err').textContent = '';
-}
-
-async function doLogin() {
-  const username = document.getElementById('login-user').value.trim();
-  const password = document.getElementById('login-pass').value;
-  document.getElementById('login-err').textContent = '';
-  try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ username, password }),
+    document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => navigate(btn.dataset.page));
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Login failed');
-    loginSuccess(data);
-  } catch(e) {
-    document.getElementById('login-err').textContent = e.message;
-  }
-}
 
-async function doRegister() {
-  const full_name = document.getElementById('reg-name').value.trim();
-  const email     = document.getElementById('reg-email').value.trim();
-  const username  = document.getElementById('reg-user').value.trim();
-  const password  = document.getElementById('reg-pass').value;
-  document.getElementById('reg-err').textContent = '';
-  if (!full_name || !email || !username || !password) {
-    document.getElementById('reg-err').textContent = 'All fields are required'; return;
-  }
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ full_name, email, username, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Registration failed');
-    loginSuccess(data);
-  } catch(e) {
-    document.getElementById('reg-err').textContent = e.message;
-  }
-}
+    // ── Sidebar (mobile) ─────────────────────────────────────────────────────────
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('overlay-bg').classList.toggle('open');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay-bg').classList.remove('open');
+    }
 
-function loginSuccess(user) {
-  currentUser = user;
-  localStorage.setItem('loanlens_user', JSON.stringify(user));
-  closeAuth();
-  updateUserUI();
-  renderProfile();
-}
+    // ── Auth ──────────────────────────────────────────────────────────────────────
+    function showAuth() {
+      if (currentUser) { navigate('profile'); return; }
+      document.getElementById('auth-modal').classList.add('open');
+    }
+    function closeAuth() {
+      document.getElementById('auth-modal').classList.remove('open');
+    }
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) =>
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register')));
+      document.getElementById('login-form').style.display = tab === 'login' ? '' : 'none';
+      document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+      document.getElementById('login-err').textContent = '';
+      document.getElementById('reg-err').textContent = '';
+    }
 
-function logout() {
-  currentUser = null;
-  localStorage.removeItem('loanlens_user');
-  updateUserUI();
-  navigate('dashboard');
-}
+    async function doLogin() {
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value;
+      document.getElementById('login-err').textContent = '';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Login failed');
+        loginSuccess(data);
+      } catch (e) {
+        document.getElementById('login-err').textContent = e.message;
+      }
+    }
 
-function updateUserUI() {
-  const u = currentUser;
-  if (u) {
-    document.getElementById('nav-username').textContent = u.full_name;
-    document.getElementById('nav-user-role').textContent = '@' + u.username;
-    document.getElementById('nav-avatar').src = u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${u.full_name}`;
-    document.getElementById('auth-btn').textContent = u.full_name.split(' ')[0];
-    document.getElementById('save-hint').textContent = 'Predictions are saved to your history.';
-  } else {
-    document.getElementById('nav-username').textContent = 'Sign In';
-    document.getElementById('nav-user-role').textContent = 'Guest user';
-    document.getElementById('nav-avatar').src = 'https://api.dicebear.com/7.x/initials/svg?seed=Guest';
-    document.getElementById('auth-btn').textContent = 'Sign In';
-    document.getElementById('save-hint').textContent = 'Sign in to save this prediction to your history.';
-  }
-}
+    async function doRegister() {
+      const full_name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const username = document.getElementById('reg-user').value.trim();
+      const password = document.getElementById('reg-pass').value;
+      document.getElementById('reg-err').textContent = '';
+      if (!full_name || !email || !username || !password) {
+        document.getElementById('reg-err').textContent = 'All fields are required'; return;
+      }
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Registration failed');
+        loginSuccess(data);
+      } catch (e) {
+        document.getElementById('reg-err').textContent = e.message;
+      }
+    }
 
-// ── Loan Rates ────────────────────────────────────────────────────────────────
-async function loadRates() {
-  try {
-    const data = await (await fetch('/api/rates')).json();
-    document.getElementById('rates-as-of').textContent = `As of ${data.as_of}`;
-    document.getElementById('rate-grid').innerHTML = data.rates.map(r => `
+    function loginSuccess(user) {
+      currentUser = user;
+      localStorage.setItem('loanlens_user', JSON.stringify(user));
+      closeAuth();
+      updateUserUI();
+      renderProfile();
+    }
+
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('loanlens_user');
+      updateUserUI();
+      navigate('dashboard');
+    }
+
+    function updateUserUI() {
+      const u = currentUser;
+      if (u) {
+        document.getElementById('nav-username').textContent = u.full_name;
+        document.getElementById('nav-user-role').textContent = '@' + u.username;
+        document.getElementById('nav-avatar').src = u.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${u.full_name}`;
+        document.getElementById('auth-btn').textContent = u.full_name.split(' ')[0];
+        document.getElementById('save-hint').textContent = 'Predictions are saved to your history.';
+      } else {
+        document.getElementById('nav-username').textContent = 'Sign In';
+        document.getElementById('nav-user-role').textContent = 'Guest user';
+        document.getElementById('nav-avatar').src = 'https://api.dicebear.com/7.x/initials/svg?seed=Guest';
+        document.getElementById('auth-btn').textContent = 'Sign In';
+        document.getElementById('save-hint').textContent = 'Sign in to save this prediction to your history.';
+      }
+    }
+
+    // ── Loan Rates ────────────────────────────────────────────────────────────────
+    async function loadRates() {
+      try {
+        const data = await (await fetch('/api/rates')).json();
+        document.getElementById('rates-as-of').textContent = `As of ${data.as_of}`;
+        document.getElementById('rate-grid').innerHTML = data.rates.map(r => `
       <div class="rate-card">
         <div class="rate-icon">${r.icon}</div>
         <div class="rate-type">${r.label}</div>
@@ -869,197 +1782,197 @@ async function loadRates() {
           ${Math.abs(r.change).toFixed(2)}% today
         </div>
       </div>`).join('');
-  } catch {
-    document.getElementById('rate-grid').innerHTML = '<div class="err-msg">Could not load rates</div>';
-  }
-}
+      } catch {
+        document.getElementById('rate-grid').innerHTML = '<div class="err-msg">Could not load rates</div>';
+      }
+    }
 
-// ── Dashboard Health ──────────────────────────────────────────────────────────
-async function loadDashboard() {
-  try {
-    const h = await (await fetch('/api/health')).json();
-    const m = h.model;
-    document.getElementById('dash-accuracy').textContent = (m.accuracy * 100).toFixed(1) + '%';
-    document.getElementById('dash-approval').textContent = (m.approval_rate * 100).toFixed(0) + '%';
-    document.getElementById('dash-samples').textContent  = m.samples.toLocaleString('en-IN');
-    document.getElementById('dash-roc').textContent      = m.roc_auc;
-    document.getElementById('status-dot').classList.add('live');
-    document.getElementById('foot-dot').classList.add('live');
-    document.getElementById('status-val').textContent    = '🟢 Live';
-    document.getElementById('foot-status').textContent   = 'Service live';
-    document.getElementById('status-commit').innerHTML   = `<code>${h.version}</code>`;
-    document.getElementById('status-built').textContent  = h.built_at;
-    document.getElementById('pipeline-built').textContent = `Deployed: ${h.built_at}`;
-    document.getElementById('pipeline-strip').insertAdjacentHTML('beforeend',
-      `<span>Commit <code>${h.version}</code></span><span>Algorithm: <b>${m.algorithm}</b></span><span>F1 Score: <b>${m.f1}</b></span>`);
-  } catch {
-    document.getElementById('status-val').textContent = '🔴 Unreachable';
-    document.getElementById('foot-status').textContent = 'Service unreachable';
-  }
-}
+    // ── Dashboard Health ──────────────────────────────────────────────────────────
+    async function loadDashboard() {
+      try {
+        const h = await (await fetch('/api/health')).json();
+        const m = h.model;
+        document.getElementById('dash-accuracy').textContent = (m.accuracy * 100).toFixed(1) + '%';
+        document.getElementById('dash-approval').textContent = (m.approval_rate * 100).toFixed(0) + '%';
+        document.getElementById('dash-samples').textContent = m.samples.toLocaleString('en-IN');
+        document.getElementById('dash-roc').textContent = m.roc_auc;
+        document.getElementById('status-dot').classList.add('live');
+        document.getElementById('foot-dot').classList.add('live');
+        document.getElementById('status-val').textContent = '🟢 Live';
+        document.getElementById('foot-status').textContent = 'Service live';
+        document.getElementById('status-commit').innerHTML = `<code>${h.version}</code>`;
+        document.getElementById('status-built').textContent = h.built_at;
+        document.getElementById('pipeline-built').textContent = `Deployed: ${h.built_at}`;
+        document.getElementById('pipeline-strip').insertAdjacentHTML('beforeend',
+          `<span>Commit <code>${h.version}</code></span><span>Algorithm: <b>${m.algorithm}</b></span><span>F1 Score: <b>${m.f1}</b></span>`);
+      } catch {
+        document.getElementById('status-val').textContent = '🔴 Unreachable';
+        document.getElementById('foot-status').textContent = 'Service unreachable';
+      }
+    }
 
-// ── Predictor ─────────────────────────────────────────────────────────────────
-const FIELDS = [
-  {k:'age',              l:'Age',                min:21,  max:65,  step:1,   v:32, f:v=>v+' yrs'},
-  {k:'annual_income_lakh',l:'Annual Income',     min:2,   max:60,  step:.5,  v:9,  f:v=>'₹'+v+' L'},
-  {k:'loan_amount_lakh', l:'Loan Amount',        min:1,   max:150, step:.5,  v:18, f:v=>'₹'+v+' L'},
-  {k:'term_years',       l:'Loan Term',          min:1,   max:30,  step:1,   v:15, f:v=>v+' yrs'},
-  {k:'credit_score',     l:'Credit Score',       min:300, max:900, step:5,   v:720,f:v=>v},
-  {k:'employment_years', l:'Work Experience',    min:0,   max:40,  step:1,   v:5,  f:v=>v+' yrs'},
-  {k:'existing_emi_k',   l:'Existing EMIs/mo',  min:0,   max:100, step:.5,  v:6,  f:v=>'₹'+v+' k'},
-  {k:'dependents',       l:'Dependents',         min:0,   max:6,   step:1,   v:1,  f:v=>v},
-];
-const PRESETS = {
-  strong:{age:34,annual_income_lakh:18,loan_amount_lakh:20,term_years:15,credit_score:790,employment_years:9,existing_emi_k:4,dependents:1},
-  border:{age:40,annual_income_lakh:7, loan_amount_lakh:22,term_years:15,credit_score:640,employment_years:6,existing_emi_k:8,dependents:2},
-  risky: {age:52,annual_income_lakh:4, loan_amount_lakh:35,term_years:20,credit_score:540,employment_years:2,existing_emi_k:9,dependents:4},
-};
-const sliderEls = {};
+    // ── Predictor ─────────────────────────────────────────────────────────────────
+    const FIELDS = [
+      { k: 'age', l: 'Age', min: 21, max: 65, step: 1, v: 32, f: v => v + ' yrs' },
+      { k: 'annual_income_lakh', l: 'Annual Income', min: 2, max: 60, step: .5, v: 9, f: v => '₹' + v + ' L' },
+      { k: 'loan_amount_lakh', l: 'Loan Amount', min: 1, max: 150, step: .5, v: 18, f: v => '₹' + v + ' L' },
+      { k: 'term_years', l: 'Loan Term', min: 1, max: 30, step: 1, v: 15, f: v => v + ' yrs' },
+      { k: 'credit_score', l: 'Credit Score', min: 300, max: 900, step: 5, v: 720, f: v => v },
+      { k: 'employment_years', l: 'Work Experience', min: 0, max: 40, step: 1, v: 5, f: v => v + ' yrs' },
+      { k: 'existing_emi_k', l: 'Existing EMIs/mo', min: 0, max: 100, step: .5, v: 6, f: v => '₹' + v + ' k' },
+      { k: 'dependents', l: 'Dependents', min: 0, max: 6, step: 1, v: 1, f: v => v },
+    ];
+    const PRESETS = {
+      strong: { age: 34, annual_income_lakh: 18, loan_amount_lakh: 20, term_years: 15, credit_score: 790, employment_years: 9, existing_emi_k: 4, dependents: 1 },
+      border: { age: 40, annual_income_lakh: 7, loan_amount_lakh: 22, term_years: 15, credit_score: 640, employment_years: 6, existing_emi_k: 8, dependents: 2 },
+      risky: { age: 52, annual_income_lakh: 4, loan_amount_lakh: 35, term_years: 20, credit_score: 540, employment_years: 2, existing_emi_k: 9, dependents: 4 },
+    };
+    const sliderEls = {};
 
-(function buildForm() {
-  const form = document.getElementById('slider-form');
-  FIELDS.forEach(d => {
-    const w = document.createElement('div'); w.className = 'field';
-    w.innerHTML = `<label for="s_${d.k}">${d.l}<output id="o_${d.k}"></output></label>
+    (function buildForm() {
+      const form = document.getElementById('slider-form');
+      FIELDS.forEach(d => {
+        const w = document.createElement('div'); w.className = 'field';
+        w.innerHTML = `<label for="s_${d.k}">${d.l}<output id="o_${d.k}"></output></label>
     <input type="range" id="s_${d.k}" min="${d.min}" max="${d.max}" step="${d.step}" value="${d.v}">`;
-    form.appendChild(w);
-    const el = w.querySelector('input');
-    sliderEls[d.k] = el;
-    const out = w.querySelector('output');
-    const show = () => out.textContent = d.f(+el.value);
-    el.addEventListener('input', () => { show(); schedulePredict(); });
-    show();
-  });
-  document.querySelectorAll('.preset-btn').forEach(b =>
-    b.addEventListener('click', () => {
-      const p = PRESETS[b.dataset.p];
-      FIELDS.forEach(d => { sliderEls[d.k].value = p[d.k]; sliderEls[d.k].dispatchEvent(new Event('input')); });
-    }));
-})();
+        form.appendChild(w);
+        const el = w.querySelector('input');
+        sliderEls[d.k] = el;
+        const out = w.querySelector('output');
+        const show = () => out.textContent = d.f(+el.value);
+        el.addEventListener('input', () => { show(); schedulePredict(); });
+        show();
+      });
+      document.querySelectorAll('.preset-btn').forEach(b =>
+        b.addEventListener('click', () => {
+          const p = PRESETS[b.dataset.p];
+          FIELDS.forEach(d => { sliderEls[d.k].value = p[d.k]; sliderEls[d.k].dispatchEvent(new Event('input')); });
+        }));
+    })();
 
-let pTimer, pSeq = 0;
-function schedulePredict() { clearTimeout(pTimer); pTimer = setTimeout(runPredict, 250); }
+    let pTimer, pSeq = 0;
+    function schedulePredict() { clearTimeout(pTimer); pTimer = setTimeout(runPredict, 250); }
 
-const rupees = n => '₹' + Math.round(n).toLocaleString('en-IN');
+    const rupees = n => '₹' + Math.round(n).toLocaleString('en-IN');
 
-async function runPredict() {
-  const id = ++pSeq;
-  const body = {};
-  FIELDS.forEach(d => body[d.k] = +sliderEls[d.k].value);
-  const url = '/api/predict' + (currentUser ? '?username=' + encodeURIComponent(currentUser.username) : '');
-  try {
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-    if (!res.ok) throw new Error('Server rejected values');
-    const d = await res.json();
-    if (id !== pSeq) return;
-    document.getElementById('predict-err').textContent = '';
-    renderResult(d);
-  } catch(e) {
-    document.getElementById('predict-err').textContent = e.message.includes('fetch') ? 'Cannot reach prediction service' : e.message;
-  }
-}
+    async function runPredict() {
+      const id = ++pSeq;
+      const body = {};
+      FIELDS.forEach(d => body[d.k] = +sliderEls[d.k].value);
+      const url = '/api/predict' + (currentUser ? '?username=' + encodeURIComponent(currentUser.username) : '');
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Server rejected values');
+        const d = await res.json();
+        if (id !== pSeq) return;
+        document.getElementById('predict-err').textContent = '';
+        renderResult(d);
+      } catch (e) {
+        document.getElementById('predict-err').textContent = e.message.includes('fetch') ? 'Cannot reach prediction service' : e.message;
+      }
+    }
 
-function renderResult(d) {
-  const pct = d.probability * 100;
-  const col = d.tier === 'high' ? 'var(--ok)' : d.tier === 'mid' ? 'var(--mid)' : 'var(--bad)';
-  document.getElementById('arc').style.strokeDashoffset = 100 - pct;
-  document.getElementById('arc').style.stroke = col;
-  document.getElementById('prob-pct').textContent = Math.round(pct) + '%';
-  const vt = document.getElementById('verdict-text');
-  vt.textContent = d.verdict; vt.className = 'verdict-text ' + d.tier;
-  document.getElementById('emi-val').textContent = rupees(d.monthly_emi);
-  document.getElementById('burden-val').textContent = d.debt_burden_pct + '%';
-  const max = Math.max(.05, ...d.factors.map(f => Math.abs(f.impact)));
-  document.getElementById('factors-list').innerHTML = d.factors.map(f => {
-    const w = Math.abs(f.impact) / max * 50, pos = f.impact >= 0;
-    const style = pos ? `left:50%;width:${w}%;background:var(--ok)` : `left:${50-w}%;width:${w}%;background:var(--bad)`;
-    const sign = f.impact > 0 ? '+' : '';
-    return `<div class="factor-row">
+    function renderResult(d) {
+      const pct = d.probability * 100;
+      const col = d.tier === 'high' ? 'var(--ok)' : d.tier === 'mid' ? 'var(--mid)' : 'var(--bad)';
+      document.getElementById('arc').style.strokeDashoffset = 100 - pct;
+      document.getElementById('arc').style.stroke = col;
+      document.getElementById('prob-pct').textContent = Math.round(pct) + '%';
+      const vt = document.getElementById('verdict-text');
+      vt.textContent = d.verdict; vt.className = 'verdict-text ' + d.tier;
+      document.getElementById('emi-val').textContent = rupees(d.monthly_emi);
+      document.getElementById('burden-val').textContent = d.debt_burden_pct + '%';
+      const max = Math.max(.05, ...d.factors.map(f => Math.abs(f.impact)));
+      document.getElementById('factors-list').innerHTML = d.factors.map(f => {
+        const w = Math.abs(f.impact) / max * 50, pos = f.impact >= 0;
+        const style = pos ? `left:50%;width:${w}%;background:var(--ok)` : `left:${50 - w}%;width:${w}%;background:var(--bad)`;
+        const sign = f.impact > 0 ? '+' : '';
+        return `<div class="factor-row">
       <span class="factor-label">${f.label}</span>
       <div class="factor-bar"><i style="${style}"></i></div>
-      <span class="factor-val">${sign}${Math.round(f.impact*100)}</span>
+      <span class="factor-val">${sign}${Math.round(f.impact * 100)}</span>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-// ── Insights ──────────────────────────────────────────────────────────────────
-let insightsLoaded = false;
-async function loadInsights() {
-  if (insightsLoaded) return;
-  try {
-    const data = await (await fetch('/api/insights')).json();
-    insightsLoaded = true;
+    // ── Insights ──────────────────────────────────────────────────────────────────
+    let insightsLoaded = false;
+    async function loadInsights() {
+      if (insightsLoaded) return;
+      try {
+        const data = await (await fetch('/api/insights')).json();
+        insightsLoaded = true;
 
-    // Trend chart
-    const maxRate = Math.max(...data.approval_trend.map(t => t.approval_rate));
-    document.getElementById('trend-chart').innerHTML = data.approval_trend.map(t => {
-      const h = Math.round((t.approval_rate / maxRate) * 160);
-      const pct = Math.round(t.approval_rate * 100);
-      return `<div class="chart-bar-wrap">
+        // Trend chart
+        const maxRate = Math.max(...data.approval_trend.map(t => t.approval_rate));
+        document.getElementById('trend-chart').innerHTML = data.approval_trend.map(t => {
+          const h = Math.round((t.approval_rate / maxRate) * 160);
+          const pct = Math.round(t.approval_rate * 100);
+          return `<div class="chart-bar-wrap">
         <span class="chart-val">${pct}%</span>
         <div class="chart-bar" style="height:${h}px;background:linear-gradient(180deg,var(--brand),var(--purple));"></div>
         <span class="chart-label">${t.day}</span>
       </div>`;
-    }).join('');
+        }).join('');
 
-    // Factor importance
-    document.getElementById('fi-list').innerHTML = data.top_factors.map(f => `
+        // Factor importance
+        document.getElementById('fi-list').innerHTML = data.top_factors.map(f => `
       <div class="fi-row">
         <span class="fi-label">${f.label}</span>
-        <div class="fi-bar"><div class="fi-fill" style="width:${Math.round(f.importance*100)}%"></div></div>
-        <span class="fi-val">${Math.round(f.importance*100)}%</span>
+        <div class="fi-bar"><div class="fi-fill" style="width:${Math.round(f.importance * 100)}%"></div></div>
+        <span class="fi-val">${Math.round(f.importance * 100)}%</span>
       </div>`).join('');
 
-    // Credit score table
-    const tbody = document.getElementById('score-table');
-    data.score_buckets.forEach(b => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${b.range}</td>
+        // Credit score table
+        const tbody = document.getElementById('score-table');
+        data.score_buckets.forEach(b => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${b.range}</td>
         <td><div class="mini-bar-wrap">
           <div class="mini-bar"><div class="mini-bar-fill" style="width:${b.approved}%;background:var(--ok)"></div></div>
           <span class="badge badge-ok">${b.approved}%</span>
         </div></td>
         <td><span class="badge badge-bad">${b.declined}%</span></td>`;
-      tbody.appendChild(tr);
-    });
+          tbody.appendChild(tr);
+        });
 
-    // Model metrics
-    const m = data.model;
-    document.getElementById('model-algo-badge').innerHTML =
-      `<span class="model-badge">🤖 ${m.algorithm}</span>`;
-    document.getElementById('model-metrics').innerHTML = [
-      ['Accuracy',   (m.accuracy*100).toFixed(1) + '%'],
-      ['F1 Score',   m.f1],
-      ['ROC-AUC',    m.roc_auc],
-      ['Approval Rate', (m.approval_rate*100).toFixed(0) + '%'],
-      ['Trained on', m.samples.toLocaleString('en-IN') + ' records'],
-      ['Trained at', m.trained_at],
-    ].map(([k,v]) => `<div class="metric-row"><span class="metric-name">${k}</span><span class="metric-val">${v}</span></div>`).join('');
+        // Model metrics
+        const m = data.model;
+        document.getElementById('model-algo-badge').innerHTML =
+          `<span class="model-badge">🤖 ${m.algorithm}</span>`;
+        document.getElementById('model-metrics').innerHTML = [
+          ['Accuracy', (m.accuracy * 100).toFixed(1) + '%'],
+          ['F1 Score', m.f1],
+          ['ROC-AUC', m.roc_auc],
+          ['Approval Rate', (m.approval_rate * 100).toFixed(0) + '%'],
+          ['Trained on', m.samples.toLocaleString('en-IN') + ' records'],
+          ['Trained at', m.trained_at],
+        ].map(([k, v]) => `<div class="metric-row"><span class="metric-name">${k}</span><span class="metric-val">${v}</span></div>`).join('');
 
-  } catch(e) {
-    document.getElementById('trend-chart').innerHTML = '<div class="err-msg">Failed to load insights</div>';
-  }
-}
+      } catch (e) {
+        document.getElementById('trend-chart').innerHTML = '<div class="err-msg">Failed to load insights</div>';
+      }
+    }
 
-// ── History ───────────────────────────────────────────────────────────────────
-async function loadHistory() {
-  if (!currentUser) {
-    document.getElementById('history-content').innerHTML = `
+    // ── History ───────────────────────────────────────────────────────────────────
+    async function loadHistory() {
+      if (!currentUser) {
+        document.getElementById('history-content').innerHTML = `
       <div class="empty-state"><div class="empty-icon">🔒</div>
       <p>Sign in to see your prediction history</p>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="showAuth()">Sign In</button></div>`;
-    return;
-  }
-  try {
-    const data = await (await fetch('/api/history/' + encodeURIComponent(currentUser.username))).json();
-    if (!data.history.length) {
-      document.getElementById('history-content').innerHTML = `
+        return;
+      }
+      try {
+        const data = await (await fetch('/api/history/' + encodeURIComponent(currentUser.username))).json();
+        if (!data.history.length) {
+          document.getElementById('history-content').innerHTML = `
         <div class="empty-state"><div class="empty-icon">📭</div>
         <p>No predictions yet. Go to <b>Apply</b> to make your first one!</p></div>`;
-      return;
-    }
-    document.getElementById('history-content').innerHTML = `<div class="history-list">` +
-      data.history.map(h => `
+          return;
+        }
+        document.getElementById('history-content').innerHTML = `<div class="history-list">` +
+          data.history.map(h => `
         <div class="history-item">
           <div class="history-tier ${h.tier}"></div>
           <div class="history-info">
@@ -1068,54 +1981,55 @@ async function loadHistory() {
               ₹${h.inputs.loan_amount_lakh}L loan · Score ${h.inputs.credit_score} · ${h.timestamp}
             </div>
           </div>
-          <div class="history-prob ${h.tier}">${Math.round(h.probability*100)}%</div>
+          <div class="history-prob ${h.tier}">${Math.round(h.probability * 100)}%</div>
         </div>`).join('') + `</div>`;
-  } catch {
-    document.getElementById('history-content').innerHTML = '<div class="err-msg">Failed to load history</div>';
-  }
-}
+      } catch {
+        document.getElementById('history-content').innerHTML = '<div class="err-msg">Failed to load history</div>';
+      }
+    }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
-async function renderProfile() {
-  const g = document.getElementById('profile-guest');
-  const c = document.getElementById('profile-content');
-  if (!currentUser) { g.style.display = ''; c.style.display = 'none'; return; }
-  g.style.display = 'none'; c.style.display = '';
-  const u = currentUser;
-  document.getElementById('profile-avatar').src = u.avatar;
-  document.getElementById('profile-name').textContent  = u.full_name;
-  document.getElementById('profile-email').textContent = u.email;
-  document.getElementById('profile-joined').textContent = `Member since ${u.joined}`;
-  document.getElementById('info-username').textContent = '@' + u.username;
-  document.getElementById('info-email').textContent    = u.email;
-  document.getElementById('info-joined').textContent   = u.joined;
-  // Load stats from history
-  try {
-    const data = await (await fetch('/api/history/' + encodeURIComponent(u.username))).json();
-    const h = data.history;
-    const approved = h.filter(x => x.tier === 'high').length;
-    const avg = h.length ? Math.round(h.reduce((a,x) => a + x.probability, 0) / h.length * 100) : '--';
-    document.getElementById('profile-preds').textContent    = h.length;
-    document.getElementById('profile-approved').textContent = approved;
-    document.getElementById('profile-avg').textContent      = avg + (h.length ? '%' : '');
-  } catch {}
-}
+    // ── Profile ───────────────────────────────────────────────────────────────────
+    async function renderProfile() {
+      const g = document.getElementById('profile-guest');
+      const c = document.getElementById('profile-content');
+      if (!currentUser) { g.style.display = ''; c.style.display = 'none'; return; }
+      g.style.display = 'none'; c.style.display = '';
+      const u = currentUser;
+      document.getElementById('profile-avatar').src = u.avatar;
+      document.getElementById('profile-name').textContent = u.full_name;
+      document.getElementById('profile-email').textContent = u.email;
+      document.getElementById('profile-joined').textContent = `Member since ${u.joined}`;
+      document.getElementById('info-username').textContent = '@' + u.username;
+      document.getElementById('info-email').textContent = u.email;
+      document.getElementById('info-joined').textContent = u.joined;
+      // Load stats from history
+      try {
+        const data = await (await fetch('/api/history/' + encodeURIComponent(u.username))).json();
+        const h = data.history;
+        const approved = h.filter(x => x.tier === 'high').length;
+        const avg = h.length ? Math.round(h.reduce((a, x) => a + x.probability, 0) / h.length * 100) : '--';
+        document.getElementById('profile-preds').textContent = h.length;
+        document.getElementById('profile-approved').textContent = approved;
+        document.getElementById('profile-avg').textContent = avg + (h.length ? '%' : '');
+      } catch { }
+    }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-updateUserUI();
-loadDashboard();
-loadRates();
-schedulePredict();
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    updateUserUI();
+    loadDashboard();
+    loadRates();
+    schedulePredict();
 
-// Close modal on overlay click
-document.getElementById('auth-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeAuth();
-});
+    // Close modal on overlay click
+    document.getElementById('auth-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeAuth();
+    });
 
-// Keyboard shortcuts
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAuth();
-});
-</script>
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeAuth();
+    });
+  </script>
 </body>
+
 </html>
