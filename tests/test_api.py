@@ -30,3 +30,12 @@ def test_validation_rejects_bad_input():
     with TestClient(app) as client:
         r = client.post("/api/predict", json={**GOOD, "credit_score": 50})
     assert r.status_code == 422
+
+
+def test_rates_endpoint_returns_all_loan_types():
+    with TestClient(app) as client:
+        r = client.get("/api/rates")
+    assert r.status_code == 200
+    data = r.json()
+    assert len(data["rates"]) == 6
+    assert all(rate["rate"] > 0 for rate in data["rates"])
