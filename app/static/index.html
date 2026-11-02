@@ -1803,8 +1803,6 @@
         document.getElementById('status-commit').innerHTML = `<code>${h.version}</code>`;
         document.getElementById('status-built').textContent = h.built_at;
         document.getElementById('pipeline-built').textContent = `Deployed: ${h.built_at}`;
-        document.getElementById('pipeline-strip').insertAdjacentHTML('beforeend',
-          `<span>Commit <code>${h.version}</code></span><span>Algorithm: <b>${m.algorithm}</b></span><span>F1 Score: <b>${m.f1}</b></span>`);
       } catch {
         document.getElementById('status-val').textContent = '🔴 Unreachable';
         document.getElementById('foot-status').textContent = 'Service unreachable';
