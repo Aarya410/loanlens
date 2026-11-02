@@ -1138,48 +1138,6 @@
       min-height: 18px;
     }
 
-    /* ════════════════════════════════════════════════════════
-   FOOTER STRIP
-════════════════════════════════════════════════════════ */
-    .pipeline-strip {
-      border-top: 1px solid var(--border);
-      padding: 12px 32px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      color: var(--ink3);
-      background: var(--bg2);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--ink3);
-      display: inline-block;
-      margin-right: 6px;
-      transition: all .3s;
-    }
-
-    .status-dot.live {
-      background: var(--ok);
-      box-shadow: 0 0 0 3px rgba(34, 211, 160, .25);
-    }
-
-    .pipeline-strip code {
-      background: var(--border);
-      padding: 1px 6px;
-      border-radius: 4px;
-      font-family: ui-monospace, monospace;
-      color: var(--ink2);
-      font-size: 11px;
-    }
-
-    .pipeline-strip b {
-      color: var(--ink2);
-    }
 
     /* ════════════════════════════════════════════════════════
    EMPTY STATE
@@ -1575,10 +1533,6 @@
       </div>
     </div>
 
-    <!-- FOOTER -->
-    <div class="pipeline-strip" id="pipeline-strip">
-      <span><span class="status-dot" id="foot-dot"></span><b id="foot-status">Checking service...</b></span>
-    </div>
   </div>
 
   <!-- ═══════════════════════ AUTH MODAL ═══════════════════════ -->
@@ -1797,15 +1751,12 @@
         document.getElementById('dash-samples').textContent = m.samples.toLocaleString('en-IN');
         document.getElementById('dash-roc').textContent = m.roc_auc;
         document.getElementById('status-dot').classList.add('live');
-        document.getElementById('foot-dot').classList.add('live');
         document.getElementById('status-val').textContent = '🟢 Live';
-        document.getElementById('foot-status').textContent = 'Service live';
         document.getElementById('status-commit').innerHTML = `<code>${h.version}</code>`;
         document.getElementById('status-built').textContent = h.built_at;
         document.getElementById('pipeline-built').textContent = `Deployed: ${h.built_at}`;
       } catch {
         document.getElementById('status-val').textContent = '🔴 Unreachable';
-        document.getElementById('foot-status').textContent = 'Service unreachable';
       }
     }
 
