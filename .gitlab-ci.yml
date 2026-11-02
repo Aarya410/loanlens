@@ -1,5 +1,3 @@
-# GitLab equivalent of the GitHub Actions pipeline.
-# Set CI/CD variables in GitLab: RENDER_DEPLOY_HOOK, APP_URL
 
 stages: [test, build, deploy]
 
